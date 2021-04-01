@@ -52,7 +52,22 @@ func New(ts, machineID, number uint64) ID64 {
 	}
 }
 
-// Uint64 returns uint representation of the identifier.
+// GetTS returns Unix Timestamp.
+func (id ID64) GetTS() uint64 {
+	return id.ts
+}
+
+// GetMachineID returns Machine ID.
+func (id ID64) GetMachineID() uint64 {
+	return id.machineID
+}
+
+// GetNumber returns Number.
+func (id ID64) GetNumber() uint64 {
+	return id.number
+}
+
+// Uint64 returns uint64 representation of the identifier.
 func (id ID64) Uint64() (uint64, error) {
 	if id.ts > MaxTSValue {
 		return 0, TimestampTooBigErr
