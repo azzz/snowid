@@ -1,48 +1,10 @@
 package sequence
 
 import (
-	"github.com/azzz/snowid/internal/id64"
 	"reflect"
 	"sync"
 	"testing"
 )
-
-func Test_seq64MIDtoID64MID(t *testing.T) {
-	type args struct {
-		machineID  uint64
-		sequenceID uint64
-	}
-	tests := []struct {
-		name string
-		args args
-		want uint64
-	}{
-		{
-			"return maximum value",
-			args{MaxMachineIDValue, MaxSequenceID},
-			0b1111111111,
-		},
-
-		{
-			"return zero value",
-			args{},
-			0,
-		},
-
-		{
-			"return value",
-			args{0b101, 0b111},
-			0b0010100111,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := seq64MIDtoID64MID(tt.args.machineID, tt.args.sequenceID); got != tt.want {
-				t.Errorf("compileMachineID() = %010b, want %010b", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestNewSeq64(t *testing.T) {
 	type args struct {
@@ -64,18 +26,10 @@ func TestNewSeq64(t *testing.T) {
 		},
 
 		{
-			"returns error when sequenceID is too big",
-			args{sequenceID: MaxSequenceID + 1},
-			nil,
-			true,
-		},
-
-		{
 			"returns Seq64",
 			args{machineID: 0b101, sequenceID: 0b111, timer: nil},
 			&Seq64{
 				machineID:     0b101,
-				sequenceID:    0b111,
 				number:        0,
 				seqTimestamp:  0,
 				timer:         nil,
@@ -85,7 +39,7 @@ func TestNewSeq64(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewSeq64(tt.args.machineID, tt.args.sequenceID, tt.args.timer)
+			got, err := NewSeq64(tt.args.machineID, tt.args.timer)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewSeq64() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -98,57 +52,84 @@ func TestNewSeq64(t *testing.T) {
 }
 
 func TestSeq64_Next(t *testing.T) {
-	t.Run("increments internal counter for the same timestamps", func(t *testing.T) {
-		timer := func() uint64 {
-			return 42
-		}
+	overflowTimer := func() uint64 {
+		return MaxTSValue + 1
+	}
 
-		seq := Seq64{
-			machineID:     0b101,
-			sequenceID:    0b111,
-			number:        0,
-			seqTimestamp:  0,
-			mu:            sync.Mutex{},
-			timer:         timer,
-		}
+	timerMaximum := func() uint64 {
+		return MaxTSValue
+	}
 
-		got := seq.Next()
-		want := id64.New(timer(), 0b0010100111, 0)
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Next() got = %v, want %v", got, want)
-		}
+	timer42 := func() uint64 {
+		return 0b101010
+	}
 
-		got = seq.Next()
-		want = id64.New(timer(), 0b0010100111, 1)
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Next() got = %v, want %v", got, want)
-		}
+	type fields struct {
+		machineID    uint64
+		number       uint64
+		seqTimestamp uint64
+		mu           sync.Mutex
+		timer        Timer
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    uint64
+		wantErr bool
+	}{
+		{
+			"return error if timestamp is too big",
+			fields{timer: overflowTimer}, 0, true,
+		},
 
-		got = seq.Next()
-		want = id64.New(timer(), 0b0010100111, 2)
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Next() got = %v, want %v", got, want)
-		}
-	})
+		{
+			"return error if number is too big",
+			fields{number: MaxNumberValue+1, timer: timer42, seqTimestamp: timer42()}, 0, true,
+		},
 
-	t.Run("resets internal counter on a new timestamp", func(t *testing.T) {
-		timer := func() uint64 {
-			return 42
-		}
+		{
+			"increment number for the same timestamp",
+			fields{number: 0b10, timer: timer42, seqTimestamp: timer42(), machineID: 0b111},
+			0b0000000000000000000000000000000000010101000000000111000000000011,
+			false,
+		},
 
-		seq := Seq64{
-			machineID:     0b101,
-			sequenceID:    0b111,
-			number:        5,
-			seqTimestamp:  timer()-1,
-			mu:            sync.Mutex{},
-			timer:         timer,
-		}
+		{
+			"reset number for new timestamp",
+			fields{number: 0b10, timer: timer42, seqTimestamp: timer42()-1, machineID: 0b111},
+			0b0000000000000000000000000000000000010101000000000111000000000000,
+			false,
+		},
 
-		got := seq.Next()
-		want := id64.New(timer(), 0b0010100111, 0)
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Next() got = %v, want %v", got, want)
-		}
-	})
+		{
+			"return the maximum id",
+			fields{
+				machineID: MaxMachineIDValue,
+				number: MaxNumberValue-1,
+				timer: timerMaximum,
+				seqTimestamp: timerMaximum(),
+			},
+			0b1111111111111111111111111111111111111111101111111111111111111111,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Seq64{
+				machineID:    tt.fields.machineID,
+				number:       tt.fields.number,
+				seqTimestamp: tt.fields.seqTimestamp,
+				mu:           tt.fields.mu,
+				timer:        tt.fields.timer,
+			}
+			got, err := s.Next()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Next() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Next() got = %064b, want %064b", got, tt.want)
+			}
+		})
+	}
 }
