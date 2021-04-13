@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	MachineIDTooBigErr  = errors.New("machine id is too big")
+	MachineIDTooBigErr = errors.New("machine id is too big")
 	TimestampTooBigErr = errors.New("timestamp is too big")
 	NumberTooBigErr    = errors.New("number is too big")
 )
@@ -53,12 +53,12 @@ type Timer func() uint64
 //   fmt.Println(id)
 // }
 type Seq64 struct {
-	machineID  uint64
+	machineID uint64
 
 	// number stores incremental counter.
-	number        uint64
+	number uint64
 	// seqTimestamp is the last sequence timestamp.
-	seqTimestamp  uint64
+	seqTimestamp uint64
 
 	mu    sync.Mutex
 	timer Timer
@@ -73,8 +73,8 @@ func NewSeq64(machineID uint64, timer Timer) (*Seq64, error) {
 	}
 
 	return &Seq64{
-		machineID:     machineID,
-		timer:         timer,
+		machineID: machineID,
+		timer:     timer,
 	}, nil
 }
 

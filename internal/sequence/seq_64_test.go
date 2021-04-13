@@ -29,10 +29,10 @@ func TestNewSeq64(t *testing.T) {
 			"returns Seq64",
 			args{machineID: 0b101, sequenceID: 0b111, timer: nil},
 			&Seq64{
-				machineID:     0b101,
-				number:        0,
-				seqTimestamp:  0,
-				timer:         nil,
+				machineID:    0b101,
+				number:       0,
+				seqTimestamp: 0,
+				timer:        nil,
 			},
 			false,
 		},
@@ -84,7 +84,7 @@ func TestSeq64_Next(t *testing.T) {
 
 		{
 			"return error if number is too big",
-			fields{number: MaxNumberValue+1, timer: timer42, seqTimestamp: timer42()}, 0, true,
+			fields{number: MaxNumberValue + 1, timer: timer42, seqTimestamp: timer42()}, 0, true,
 		},
 
 		{
@@ -96,7 +96,7 @@ func TestSeq64_Next(t *testing.T) {
 
 		{
 			"reset number for new timestamp",
-			fields{number: 0b10, timer: timer42, seqTimestamp: timer42()-1, machineID: 0b111},
+			fields{number: 0b10, timer: timer42, seqTimestamp: timer42() - 1, machineID: 0b111},
 			0b0000000000000000000000000000000000010101000000000111000000000000,
 			false,
 		},
@@ -104,9 +104,9 @@ func TestSeq64_Next(t *testing.T) {
 		{
 			"return the maximum id",
 			fields{
-				machineID: MaxMachineIDValue,
-				number: MaxNumberValue-1,
-				timer: timerMaximum,
+				machineID:    MaxMachineIDValue,
+				number:       MaxNumberValue - 1,
+				timer:        timerMaximum,
 				seqTimestamp: timerMaximum(),
 			},
 			0b1111111111111111111111111111111111111111101111111111111111111111,
