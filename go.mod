@@ -1,4 +1,4 @@
-module github.com/azzz/snowid
+module github.com/azzz/ratatoskr
 
 go 1.16
 
