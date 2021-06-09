@@ -26,6 +26,11 @@ usually, you don't need to change epoch during the lifetime.
 
 # Installing
 
+## With docker
+
+1. Clone the repository
+2. Run `docker build . -t snowid:latest`
+
 ## From sources
 
 ```
