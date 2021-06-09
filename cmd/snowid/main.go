@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/azzz/ratatoskr/internal/config"
-	"github.com/azzz/ratatoskr/internal/httpsrv"
-	"github.com/azzz/ratatoskr/internal/sequence"
+	"github.com/azzz/snowid/internal/config"
+	"github.com/azzz/snowid/internal/httpsrv"
+	"github.com/azzz/snowid/internal/sequence"
 	"github.com/sirupsen/logrus"
 	"os"
 	"time"

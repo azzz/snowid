@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/azzz/ratatoskr/internal/sequence"
+	"github.com/azzz/snowid/internal/sequence"
 	"github.com/sirupsen/logrus"
 )
 
