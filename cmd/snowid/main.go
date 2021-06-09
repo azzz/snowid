@@ -62,7 +62,7 @@ func main() {
 	// run server in goroutine to let running another interface if a need be
 	go func() {
 		if err := httpServer.Start(); err != nil {
-			logger.Panic("failed to start HTTP server: %s", err)
+			logger.Panicf("failed to start HTTP server: %s", err)
 			os.Exit(1)
 		}
 	}()
