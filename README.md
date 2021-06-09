@@ -32,7 +32,7 @@ usually, you don't need to change epoch during the lifetime.
 go get github.com/azzz/snowid/cmd/snowid
 ```
 
-# Usage
+# Running
 
 ## Configuration
 The service is configured by setting environment variables.
@@ -48,4 +48,34 @@ The service is configured by setting environment variables.
 
 ```
 LOG_LEVEL=info LISTEN=":8080" EPOCH="20210413001805" MACHINE_ID=333 snowid`
+```
+
+# Usage
+
+## HTTP
+
+The service can be called by HTTP
+
+### GET /id64
+
+**description:** Return an ID in both numeric and string formats. The string format might be useful if the language does not support 64 bit numbers. For example, JavaScript expects the numbers are 52 bits long. 
+
+**content-type:** application/json
+
+**Example:**
+
+```
+{"numeric":41859390008987648,"string":"41859390008987648"}
+```
+
+## Examples
+
+```
+> curl -i http://localhost:8080/id64
+HTTP/1.1 200 OK
+Date: Wed, 09 Jun 2021 18:25:13 GMT
+Content-Length: 58
+Content-Type: text/plain; charset=utf-8
+
+{"numeric":41859390008987648,"string":"41859390008987648"}
 ```
